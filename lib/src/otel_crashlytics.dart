@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_crashlytics_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_crashlytics';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class CrashlyticsResult {
+  /// Creates a result.
   const CrashlyticsResult({
     this.firebaseAppName,
     this.googleAppId,
@@ -62,8 +63,13 @@ class CrashlyticsResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class CrashlyticsCallResult<T> {
+  /// Creates a call result.
   const CrashlyticsCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final CrashlyticsResult? result;
 }
@@ -91,32 +97,32 @@ Future<T> tracedCrashlytics<T>({
   final span = _tracer().startSpan(
     'crashlytics $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.firebaseAppName != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'crashlytics.firebase_app.name',
           r.result!.firebaseAppName!,
         ));
       }
       if (r.result!.googleAppId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'crashlytics.google_app.id',
           r.result!.googleAppId!,
         ));
       }
       if (r.result!.recordKind != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'crashlytics.record.kind',
           r.result!.recordKind!,
         ));
       }
       if (r.result!.fatal != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'crashlytics.record.fatal',
           r.result!.fatal!,
         ));
@@ -125,49 +131,49 @@ Future<T> tracedCrashlytics<T>({
         }
       }
       if (r.result!.errorClass != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'crashlytics.error.class',
           r.result!.errorClass!,
         ));
       }
       if (r.result!.userId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'crashlytics.user.id',
           r.result!.userId!,
         ));
       }
       if (r.result!.customKeyCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'crashlytics.custom_keys.count',
           r.result!.customKeyCount!,
         ));
       }
       if (r.result!.breadcrumbCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'crashlytics.breadcrumbs.count',
           r.result!.breadcrumbCount!,
         ));
       }
       if (r.result!.collectionEnabled != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'crashlytics.collection.enabled',
           r.result!.collectionEnabled!,
         ));
       }
       if (r.result!.didCrashOnPreviousExecution != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'crashlytics.did_crash_previous',
           r.result!.didCrashOnPreviousExecution!,
         ));
       }
       if (r.result!.unsentReports != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'crashlytics.unsent_reports.count',
           r.result!.unsentReports!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -178,13 +184,13 @@ Future<T> tracedCrashlytics<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
